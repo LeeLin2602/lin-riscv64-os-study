@@ -6,7 +6,7 @@
 
 // the address of virtio mmio register r.
 #define R(r) ((volatile uint32_t *)(VIRTIO0 + (r)))
-#define BSIZE 512
+#define BSIZE 1024
 
 static struct disk {
     // a set (not a ring) of DMA descriptors, with which the
@@ -35,8 +35,8 @@ static struct disk {
     // for use when completion interrupt arrives.
     // indexed by first descriptor index of chain.
     struct {
-    struct buf *b;
-    char status;
+      struct buf *b;
+      char status;
     } info[NUM];
 
     // disk command headers.
@@ -258,7 +258,7 @@ void virtio_disk_rw(struct buf *b, int write) {
 
   *R(VIRTIO_MMIO_QUEUE_NOTIFY) = 0; // value is queue number
 
-  lock_free(&disk.vdisk_lock);
+  /* lock_free(&disk.vdisk_lock); */
 
   // Wait for virtio_disk_intr() to say request has finished.
   while(b->disk == 1) {
@@ -266,7 +266,7 @@ void virtio_disk_rw(struct buf *b, int write) {
     // busy waiting
   }
 
-  lock_acquire(&disk.vdisk_lock);
+  /* lock_acquire(&disk.vdisk_lock); */
 
   disk.info[idx[0]].b = 0;
   free_chain(idx[0]);
@@ -275,7 +275,7 @@ void virtio_disk_rw(struct buf *b, int write) {
 }
 
 void virtio_disk_intr() {
-  lock_acquire(&disk.vdisk_lock);
+  /* lock_acquire(&disk.vdisk_lock); */
 
   // the device won't raise another interrupt until we tell it
   // we've seen this interrupt, which the following line does.
@@ -294,17 +294,20 @@ void virtio_disk_intr() {
     __sync_synchronize();
     int id = disk.used->ring[disk.used_idx % NUM].id;
 
-    if(disk.info[id].status != 0)
-      panic("virtio_disk_intr status");
-
     struct buf *b = disk.info[id].b;
+    if(disk.info[id].status != 0) {
+      printf("virtio_disk_intr status failed.\n");
+      b->successful = 0;
+    } else {
+      b->successful = 1;
+    }
     b->disk = 0;   // disk is done with buf
     /* wakeup(b); */
 
     disk.used_idx += 1;
   }
 
-  lock_free(&disk.vdisk_lock);
+  /* lock_free(&disk.vdisk_lock); */
 }
 
 

@@ -13,7 +13,7 @@
 #define BSIZE 512 
 
 void test_virtio_disk(void) {
-    const int test_blockno = 100;  
+    const int test_blockno = 10;  
     char data[BSIZE];
     struct buf b;
 
@@ -31,7 +31,11 @@ void test_virtio_disk(void) {
     virtio_disk_rw(&b, 0);
     printf("New data at block %d: %s\n", test_blockno, b.data);
 
-    printf("Disk test succeeded!\n");
+    if(b.successful) {
+        printf("Test successful.\n");
+    } else {
+        printf("Test failed.\n");
+    }
 }
 
 void delay(int count) {
