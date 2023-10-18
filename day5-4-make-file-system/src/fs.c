@@ -1,8 +1,11 @@
+
 #include "fs.h"
 #include "bio.h"
 #include "string.h"
-#include "printf.h"
 
+#ifndef riscvos
+#include <stdio.h>
+#endif
 
 
 void format() {

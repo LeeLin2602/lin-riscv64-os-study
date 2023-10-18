@@ -1,4 +1,11 @@
 #include "bio.h"
+#include "lock.h"
+#include "string.h"
+#include "mem.h"
+#include "virtio.h"
+#include "ds.h"
+#include "fs.h"
+
 
 int bread(uint32_t dev, uint32_t blockno, void *buffer) {
     struct buf *b = malloc(sizeof(struct buf));

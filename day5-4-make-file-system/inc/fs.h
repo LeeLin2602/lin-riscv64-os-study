@@ -1,8 +1,6 @@
-#pragma once
-
 #include "riscv.h"
-#include "bio.h"
-#include "string.h"
+#include <stddef.h>
+#define BLOCK_SIZE 1024
 
 #define MAX_FILENAME_SIZE      256
 #define DATA_SIZE (BLOCK_SIZE - sizeof(int8_t) - 3 * sizeof(int64_t))

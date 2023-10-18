@@ -1,3 +1,5 @@
+#define riscvos
+
 #include "printf.h"
 #include "mem.h"
 #include "time.h"
