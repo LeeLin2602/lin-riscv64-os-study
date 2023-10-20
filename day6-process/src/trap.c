@@ -1,15 +1,6 @@
 #include "trap.h"
 
-void trap_init_s() {
-    w_stvec((reg_t)trap_vector_s);
-    printf("%llx\n", r_sie() | SIE_SEIE | SIE_STIE);
-    w_sie(r_sie() | SIE_SEIE | SIE_STIE);
-    asm ("fence.i");
-    printf("%llx\n", r_sie());
-    w_sstatus(r_sstatus() | SSTATUS_SIE);
-}
-
-void trap_init_m() {
+void trap_init() {
     // set the machine-mode trap handler.
     w_mtvec((reg_t)trap_vector);
     // enable external interrupts and timer interrupts.
@@ -57,6 +48,7 @@ reg_t trap_handler(reg_t epc, reg_t cause, struct context *ctx) {
     /* printf("0x%x", cause); */
     if (cause & 0x8000000000000000LL)
     {
+    /* printf("interrupt happens\n"); */
         /* Asynchronous trap - interrupt */
         switch (cause_code) {
             case 3:

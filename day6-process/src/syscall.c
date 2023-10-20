@@ -2,6 +2,7 @@
 #include "sys.h"
 #include "printf.h"
 #include "proc.h"
+#include "trap.h"
 
 void do_syscall(struct context *ctx) {
     uint32_t syscall_num = ctx->a7;
@@ -16,6 +17,7 @@ void do_syscall(struct context *ctx) {
         break;
     case 3:
         printf("program has exitted with code %d on core %d.\n", ctx->a0, r_tp());
+        w_mstatus(r_mstatus() | MSTATUS_MIE);
         proc_exec(cpus[r_mhartid()].proc, os_proc);
         /* while(1); */
         break;

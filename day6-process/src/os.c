@@ -29,11 +29,10 @@ void kernel_main() {
     /*     printf("Build up filesystem.\n"); */
     /* } */
     printf("Enter S Mode.\n");
-    dump_fs();
+
     struct proc* test_proc = create_proc();
     exec(test_proc, "/user");
     proc_exec(os_proc, test_proc);
-    /* sys_exit(0); */
     printf("%llx\n", r_sie());
     
     while(1) {
@@ -47,12 +46,13 @@ void boot() {
     page_init();
     uart_init();
     timer_init();
-    trap_init_m();
-    trap_init_s();
+    trap_init();
     plic_init();
     vm_init();
     virtio_disk_init();
     proc_init();
+
+    // init system process
     os_proc = create_proc();
     set_cpu_proc(os_proc);
 }
