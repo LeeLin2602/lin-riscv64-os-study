@@ -19,11 +19,11 @@ static inline void w_mscratch(reg_t x)
   asm volatile("csrw mscratch, %0" : : "r" (x));
 }
 
-
-// Machine-mode Interrupt Enable
-#define MIE_MEIE (1 << 11) // external
-#define MIE_MTIE (1 << 7)  // timer
-#define MIE_MSIE (1 << 3)  // software
+// Supervisor Scratch register, for early trap handler
+static inline void w_sscratch(reg_t x)
+{
+  asm volatile("csrw sscratch, %0" : : "r" (x));
+}
 
 void timer_init();
 void timer_handler();

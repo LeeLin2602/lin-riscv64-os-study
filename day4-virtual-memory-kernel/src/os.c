@@ -17,7 +17,6 @@ void delay(int count) {
 
 void kernel_main() {
     printf("Entered S Mode!\n");
-    sys_free(sys_malloc(8964 * 2));
     while(1) {
         printf("OS Loop\n");
         delay(10000);
@@ -37,5 +36,6 @@ void boot() {
 int os_main() {
     boot();
     switch_to_s_mode(kernel_main);
+    /* kernel_main(); */
     return 0;
 }

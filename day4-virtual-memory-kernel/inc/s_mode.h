@@ -12,7 +12,7 @@ static inline uint64_t read_mstatus() {
     return value;
 }
 
-void switch_to_s_mode(void (*s_mode_entry)(void)) {
+void switch_to_s_mode(void (*s_mode_entry)) {
     // Set the mepc register to the S-mode entry point
     write_mepc((uint64_t)s_mode_entry);
 

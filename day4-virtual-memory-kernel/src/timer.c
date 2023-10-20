@@ -22,6 +22,7 @@ void timer_init() {
     scratch[3] = CLINT_MTIMECMP(id);
     scratch[4] = interval;
     w_mscratch((reg_t)scratch);
+    w_sscratch((reg_t)scratch);
 }
 
 static int timer_count = 0;

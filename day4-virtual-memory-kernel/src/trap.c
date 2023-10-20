@@ -3,15 +3,13 @@
 void trap_init() {
     // set the machine-mode trap handler.
     w_mtvec((reg_t)trap_vector);
-
-    // enable machine-mode external interrupts.
-    w_mie(r_mie() | MIE_MEIE);
-
-    // enable machine-mode timer interrupts.
-    w_mie(r_mie() | MIE_MTIE);
-
+    w_stvec((reg_t)trap_vector);
+    // enable external interrupts and timer interrupts.
+    w_mie(r_mie() | MIE_MEIE | MIE_MTIE);
+    w_sie(r_sie() | SIE_SEIE | SIE_STIE);
     // enable machine-mode interrupts.
     w_mstatus(r_mstatus() | MSTATUS_MIE);
+    w_sstatus(r_sstatus() | SSTATUS_SIE);
 }
 
 void external_handler() {
@@ -105,6 +103,7 @@ reg_t trap_handler(reg_t epc, reg_t cause, struct context *ctx) {
             default:
                  /* Synchronous trap - exception */
                 printf("Sync exceptions! cause code: %d\n", cause_code);
+                while(1);
                 break;
         }
         /* return_pc += 2; */

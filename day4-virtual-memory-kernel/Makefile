@@ -33,4 +33,4 @@ clean:
 	rm -f $(BDIR)/*_asm.o $(BDIR)/*.o kernel.elf kernel.img
 
 run: all
-	qemu-system-riscv64 -m 128M -M virt -serial stdio -display none -bios none -kernel kernel.img # -device loader,file=kernel.img
+	qemu-system-riscv64 -m 128M -M virt -serial stdio -display none -bios none -kernel kernel.img -gdb tcp::1234
