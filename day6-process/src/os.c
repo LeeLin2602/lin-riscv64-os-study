@@ -31,9 +31,8 @@ void kernel_main() {
     printf("Enter S Mode.\n");
 
     struct proc* test_proc = create_proc();
-    exec(test_proc, "/user");
+    exec(test_proc, "/user2");
     proc_exec(os_proc, test_proc);
-    printf("%llx\n", r_sie());
     
     while(1) {
         printf("OS Loop\n");

@@ -34,13 +34,17 @@ mkfs/mkfs: $(SDIR)/fs.c mkfs/mkfs.c
 
 disk: mkfs/mkfs user
 	dd of=disk.img if=/dev/zero bs=M count=2
-	mkfs/mkfs user
+	mkfs/mkfs user/*
 clean:
 	rm -f $(BDIR)/*_asm.o $(BDIR)/*.o kernel.elf kernel.img
 
-user: $(BDIR)/uart.o $(BDIR)/usys_asm.o
-	$(CC) $(CFLAGS) -Werror -Wall -I$(IDIR) -c user.c -o $(BDIR)/user.o 
-	$(LD) -T user.ld -o user $(BDIR)/user.o $(BDIR)/printf.o $(BDIR)/uart.o $(BDIR)/usys_asm.o
+user/user2: $(BDIR)/uart.o $(BDIR)/usys_asm.o
+	$(CC) $(CFLAGS) -Werror -Wall -I$(IDIR) -c user/user2.c -o $(BDIR)/user2.o 
+	$(LD) -T user/user.ld -o user/user2 $(BDIR)/user2.o $(BDIR)/printf.o $(BDIR)/uart.o $(BDIR)/usys_asm.o
+
+user/user1: $(BDIR)/uart.o $(BDIR)/usys_asm.o
+	$(CC) $(CFLAGS) -Werror -Wall -I$(IDIR) -c user/user1.c -o $(BDIR)/user1.o 
+	$(LD) -T user/user.ld -o user/user1 $(BDIR)/user1.o $(BDIR)/printf.o $(BDIR)/uart.o $(BDIR)/usys_asm.o
 
 QEMUARG = -gdb tcp::1234 -m 128M -M virt -serial stdio -display none -bios none -kernel kernel.img -global virtio-mmio.force-legacy=false -drive file=disk.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 

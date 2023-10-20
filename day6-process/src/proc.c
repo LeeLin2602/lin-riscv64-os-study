@@ -75,7 +75,6 @@ void exec(struct proc* process, const char* filename) {
 }
 
 void set_cpu_proc(struct proc* next) {
-    printf("core %d\n", r_tp());
     cpus[r_tp()].proc = next;
 }
 void proc_exec(struct proc* cur, struct proc* next) {
