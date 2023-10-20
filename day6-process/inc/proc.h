@@ -6,6 +6,8 @@
 #include "mem.h"
 
 #define STACK_SIZE 8192 
+#define TRAMPOLINE (MAXVA - PAGE_SIZE)
+#define TRAPFRAME (TRAMPOLINE - PAGE_SIZE)
 
 struct cpu {
 	struct proc* proc;          // The process running on this cpu, or null.
@@ -31,7 +33,7 @@ struct proc {
   uint64_t sz;                 // Size of process memory (bytes)
   pte_t* page_table;           // User page table
   struct trapframe *trapframe; // data page for trampoline.S
-  struct context context;      // sys_switch() here to run process
+  struct context *context;      // sys_switch() here to run process
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
 };

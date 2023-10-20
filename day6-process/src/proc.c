@@ -43,16 +43,19 @@ struct proc* create_proc() {
         if(p->state == UNUSED) {
             p->state = USED;
             p->pid = allocpid();
-            struct context ctx;
-            ctx.ra = (reg_t) 0;
-            ctx.sp = (reg_t) p->stack + STACK_SIZE - 1;
-            p->context.ra = 0; // instrs + 0x1042;
-            ctx.satp = MAKE_SATP(p->page_table);
+            struct context *ctx = malloc(sizeof(struct context));
+            ctx->ra = (reg_t) 0;
+            ctx->sp = (reg_t) p->stack + STACK_SIZE - 1;
+            ctx->satp = MAKE_SATP(p->page_table);
             p->context = ctx;
 
             /* memset(p->stack, 0, STACK_SIZE); */
             lock_free(&p->lock);
-            /* map_pages(p->page_table, PROGRAM_SIZE,(uint64_t)p->stack, STACK_SIZE, PTE_R | PTE_W); */
+            printf("%llx\n", sys_switch);
+            map_pages(p->page_table, (uint64_t)p->stack,(uint64_t)p->stack, STACK_SIZE, PTE_R | PTE_W);
+            map_pages(p->page_table, (uint64_t)p->context, (uint64_t)p->context, PAGE_SIZE, PTE_R | PTE_W);
+            // here might be a security issue that userspace programs can access part of kernel code.
+            map_pages(p->page_table, (uint64_t)sys_switch, (uint64_t)sys_switch, PAGE_SIZE, PTE_R | PTE_X);
             return p;
         }
         lock_free(&p->lock);
@@ -63,15 +66,16 @@ struct proc* create_proc() {
 void test() {
     /* printf("hello, Test.\n"); */
     /* sys_exit(0); */
-    sys_free(sys_malloc(4096));
+    /* sys_free(sys_malloc(4096)); */
 }
 
 void exec(struct proc* process, const char* filename) {
     char * instrs = malloc(PROGRAM_SIZE);
     size_t size = fs_read(filename, instrs, PROGRAM_SIZE);
     /* process->context.ra = test; //instrs + 0x1042; */
-    process->context.ra = instrs + 0x1042;
-    /* map_pages(process->page_table, 0, (uint64_t)instrs + 0x1000, ((size + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE, PTE_R | PTE_W | PTE_X); */
+    process->context->ra = instrs + 0x1042;
+    map_pages(process->page_table, (uint64_t)instrs, (uint64_t)instrs, ((size + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE, PTE_R | PTE_X);
+	map_page(process->page_table, UART, UART, PTE_R | PTE_W);
 }
 
 void set_cpu_proc(struct proc* next) {
@@ -79,5 +83,5 @@ void set_cpu_proc(struct proc* next) {
 }
 void proc_exec(struct proc* cur, struct proc* next) {
     set_cpu_proc(next);
-    sys_switch(&cur->context, &next->context);
+    sys_switch(cur->context, next->context);
 }

@@ -14,9 +14,17 @@
         sd s9, 192(\base)
         sd s10, 200(\base)
         sd s11, 208(\base)
+        csrr t0, satp     # Read satp into temporary register t0
+        sd t0, 248(\base) # Save satp
 .endm
 
 .macro ctx_load base
+
+        ld t0, 248(\base) # Load satp into temporary register t0
+        sfence.vma zero, zero
+        csrw satp, t0     # Write satp from temporary register t0
+        sfence.vma zero, zero
+
         ld ra, 0(\base)
         ld sp, 8(\base)
         ld s0, 56(\base)
@@ -67,9 +75,13 @@
         sd t4, 224(\base)
         sd t5, 232(\base)
         sd t6, 240(\base)
+        csrr t0, satp     # Read satp into temporary register t0
+        sd t0, 248(\base) # Save satp
 .endm
 
 .macro reg_load base
+        ld t0, 248(\base) # Load satp into temporary register t0
+        csrw satp, t0     # Write satp from temporary register t0
         # restore registers.
         ld ra, 0(\base)
         ld sp, 8(\base)
