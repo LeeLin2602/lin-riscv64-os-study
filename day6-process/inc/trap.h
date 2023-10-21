@@ -42,5 +42,4 @@ static inline void w_stvec(reg_t x)
   asm volatile("csrw stvec, %0" : : "r" (x));
 }
 
-void trap_init_s();
-void trap_init_m();
+void trap_init();

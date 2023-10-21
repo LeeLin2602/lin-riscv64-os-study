@@ -34,12 +34,11 @@ void kernel_main() {
     struct proc* test2_proc = create_proc();
     exec(test1_proc, "/user1");
     exec(test2_proc, "/user2");
-    proc_exec(os_proc, test1_proc);
+    /* proc_exec(os_proc, test2_proc); */
     
     while(1) {
-        printf("OS Loop\n");
-        delay(10000);
-    };
+        scheduler();
+    }
 }
 
 void boot() {

@@ -10,6 +10,7 @@
 
 int nextpid = 1;
 lock_t pid_lock;
+lock_t sched_lock;
 struct cpu cpus[NCPU];
 struct proc processes[NPROC];
 struct proc* os_proc;
@@ -27,6 +28,7 @@ int allocpid() {
 
 void proc_init() {
     lock_init(&pid_lock);
+    lock_init(&sched_lock);
 	struct proc *p;
 	for(p = processes; p < &processes[NPROC]; p++) {
 		lock_init(&p->lock);
@@ -49,9 +51,7 @@ struct proc* create_proc() {
             ctx->satp = MAKE_SATP(p->page_table);
             p->context = ctx;
 
-            /* memset(p->stack, 0, STACK_SIZE); */
             lock_free(&p->lock);
-            printf("%llx\n", sys_switch);
             map_pages(p->page_table, (uint64_t)p->stack,(uint64_t)p->stack, STACK_SIZE, PTE_R | PTE_W);
             map_pages(p->page_table, (uint64_t)p->context, (uint64_t)p->context, PAGE_SIZE, PTE_R | PTE_W);
             // here might be a security issue that userspace programs can access part of kernel code.
@@ -63,25 +63,58 @@ struct proc* create_proc() {
     return NULL;
 }
 
-void test() {
-    /* printf("hello, Test.\n"); */
-    /* sys_exit(0); */
-    /* sys_free(sys_malloc(4096)); */
+uint64_t getELFEntryPoint(const char* file) {
+    struct elfhdr ehdr;
+    memcpy(&ehdr, file, sizeof(ehdr));
+
+    if(ehdr.magic != ELF_MAGIC) {
+        printf("Not an ELF file\n");
+        return -1;
+    }
+
+	return ehdr.entry + 0x1000;
 }
 
-void exec(struct proc* process, const char* filename) {
-    char * instrs = malloc(PROGRAM_SIZE);
-    size_t size = fs_read(filename, instrs, PROGRAM_SIZE);
-    /* process->context.ra = test; //instrs + 0x1042; */
-    process->context->ra = instrs + 0x1042;
-    map_pages(process->page_table, (uint64_t)instrs, (uint64_t)instrs, ((size + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE, PTE_R | PTE_X);
-	map_page(process->page_table, UART, UART, PTE_R | PTE_W);
+int exec(struct proc* process, const char* filename) {
+	lock_acquire(&process->lock);
+    char * elf = malloc(PROGRAM_SIZE);
+    size_t size = fs_read(filename, elf, PROGRAM_SIZE);
+
+	uint64_t entryPoint = getELFEntryPoint(elf);
+	if(entryPoint == -1) return 1;
+
+    process->context->ra = (reg_t)elf + entryPoint;
+    process->instrs = elf;
+    process->state = RUNNABLE;
+
+    map_pages(process->page_table, (uint64_t)elf, (uint64_t)elf, PROGRAM_SIZE, PTE_R | PTE_X);
+	map_pages(process->page_table, UART, UART, PAGE_SIZE, PTE_R | PTE_W);
+
+    lock_free(&process->lock);
+	return 0;
 }
 
 void set_cpu_proc(struct proc* next) {
     cpus[r_tp()].proc = next;
 }
+
 void proc_exec(struct proc* cur, struct proc* next) {
     set_cpu_proc(next);
+    cur->state = RUNNABLE;
     sys_switch(cur->context, next->context);
+    trap_init();
+}
+
+void scheduler() {
+	struct proc *p;
+	for(p = processes; p < &processes[NPROC]; p++) {
+        lock_acquire(&sched_lock);
+		lock_acquire(&p->lock);
+        if(p->state == RUNNABLE) {
+            p->state = RUNNING;
+            proc_exec(cpus[r_tp()].proc, p);
+        }
+        lock_free(&p->lock);
+        lock_free(&sched_lock);
+    }
 }

@@ -14,17 +14,9 @@
         sd s9, 192(\base)
         sd s10, 200(\base)
         sd s11, 208(\base)
-        csrr t0, satp     # Read satp into temporary register t0
-        sd t0, 248(\base) # Save satp
 .endm
 
 .macro ctx_load base
-
-        ld t0, 248(\base) # Load satp into temporary register t0
-        sfence.vma zero, zero
-        csrw satp, t0     # Write satp from temporary register t0
-        sfence.vma zero, zero
-
         ld ra, 0(\base)
         ld sp, 8(\base)
         ld s0, 56(\base)
@@ -77,11 +69,20 @@
         sd t6, 240(\base)
         csrr t0, satp     # Read satp into temporary register t0
         sd t0, 248(\base) # Save satp
+        csrr t0, mepc      # Read mepc into temporary register t0
+        sd t0, 256(\base) # Save mepc
 .endm
 
 .macro reg_load base
+        
         ld t0, 248(\base) # Load satp into temporary register t0
+        sfence.vma zero, zero
         csrw satp, t0     # Write satp from temporary register t0
+        sfence.vma zero, zero
+
+        ld t0, 256(\base) # Load mepc into temporary register t0
+        csrw mepc, t0     # Write mepc from temporary register t0
+
         # restore registers.
         ld ra, 0(\base)
         ld sp, 8(\base)
@@ -131,36 +132,6 @@ sys_switch:
         ctx_load a1  # a1 => struct context *new
         ret 
 
-
-.global trap_vector_s
-.align 4
-trap_vector_s:
-
-    # Save the context
-
-    addi sp, sp, -256  
-    reg_save sp
-
-    li a0, 4321
-    call print_int
-
-    # call the C timer_handler(reg_t epc, reg_t cause)
-
-    csrr    a0, mepc
-    csrr    a1, mcause
-    mv      a2, sp
-    call    trap_handler
-
-    # timer_handler will return the return address via a0.
-    csrw    mepc, a0
-
-    # Restore the context
-
-    reg_load sp
-    addi sp, sp, 256
-
-    mret # back to interrupt location (pc=mepc)
-
 .global trap_vector
 .align 4
 trap_vector:
@@ -169,9 +140,6 @@ trap_vector:
 
     addi sp, sp, -256  
     reg_save sp
-
-    /* li a0, 1234 */
-    /* call print_int */
 
     # call the C timer_handler(reg_t epc, reg_t cause)
 

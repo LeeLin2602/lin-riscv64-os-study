@@ -1,17 +1,19 @@
 #include "timer.h"
+#include "proc.h"
+#include "param.h"
+
 #include <stdint.h>
 
-reg_t timer_scratch[1024][5];
+reg_t timer_scratch[NPROC][5];
 
-// cycles; about 1 second in qemu.
-#define interval 10000000 
+// cycles; about 0.1 second in qemu.
+#define interval 1000000
 
 void timer_init() {
     // each CPU has a separate source of timer interrupts.
     int id = r_mhartid();
 
     // ask the CLINT for a timer interrupt.
-    // int interval = 1000000; // cycles; about 1/10th second in qemu.
 
     *(reg_t *)(uintptr_t)CLINT_MTIMECMP(id) = *(reg_t *)(uintptr_t)CLINT_MTIME + interval;
 
@@ -24,14 +26,12 @@ void timer_init() {
     scratch[4] = interval;
     w_mscratch((reg_t)scratch);
     w_sscratch((reg_t)scratch);
-    // enable machine-mode timer interrupts.
 }
 
 static int timer_count = 0;
 
 void timer_handler() {
-    printf("timer_handler: %d\n", ++timer_count);
     int id = r_mhartid();
     *(reg_t *)(uintptr_t)CLINT_MTIMECMP(id) = *(reg_t *)(uintptr_t)CLINT_MTIME + interval;
-
+    proc_exec(cpus[r_mhartid()].proc, os_proc);
 }

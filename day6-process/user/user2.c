@@ -9,10 +9,11 @@ int main() {
 
 void _main() {
     int x = main();
-    /* x += 1; */
-    /* while(1) printf("user process\n"); */
     while(1){
         putchar('b');
+        putchar('\n');
+        int cnt = 50000000;
+        while(cnt--);
     }
     sys_exit(x);
 }
