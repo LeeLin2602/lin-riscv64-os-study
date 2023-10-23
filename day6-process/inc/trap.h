@@ -1,3 +1,5 @@
+#pragma once
+
 #include "printf.h"
 #include "virtio.h"
 #include "riscv.h"

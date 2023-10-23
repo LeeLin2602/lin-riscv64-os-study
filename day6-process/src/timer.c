@@ -28,8 +28,6 @@ void timer_init() {
     w_sscratch((reg_t)scratch);
 }
 
-static int timer_count = 0;
-
 void timer_handler() {
     int id = r_mhartid();
     *(reg_t *)(uintptr_t)CLINT_MTIMECMP(id) = *(reg_t *)(uintptr_t)CLINT_MTIME + interval;

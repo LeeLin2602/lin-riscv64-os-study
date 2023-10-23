@@ -3,6 +3,7 @@
 #include "param.h"
 #include "lock.h"
 #include "sys.h"
+#include "trap.h"
 #include "mem.h"
 
 #define STACK_SIZE 8192 

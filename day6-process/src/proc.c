@@ -78,7 +78,7 @@ uint64_t getELFEntryPoint(const char* file) {
 int exec(struct proc* process, const char* filename) {
 	lock_acquire(&process->lock);
     char * elf = malloc(PROGRAM_SIZE);
-    size_t size = fs_read(filename, elf, PROGRAM_SIZE);
+    fs_read(filename, elf, PROGRAM_SIZE);
 
 	uint64_t entryPoint = getELFEntryPoint(elf);
 	if(entryPoint == -1) return 1;

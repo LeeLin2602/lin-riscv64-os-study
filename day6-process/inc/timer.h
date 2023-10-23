@@ -1,3 +1,5 @@
+#pragma once
+
 #include "sys.h"
 #include "riscv.h"
 #include "printf.h"
