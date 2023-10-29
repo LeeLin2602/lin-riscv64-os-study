@@ -8,7 +8,30 @@
 #define FILE_NAME "disk.img"
 #define MAX_SIZE 2048
 
+char* strrchr(const char* str, int ch) {
+    const char* lastOccurrence = NULL;
 
+    while (*str) {
+        if (*str == ch) {
+            lastOccurrence = str;
+        }
+        str++;
+    }
+
+    return (char*)lastOccurrence;
+}
+
+
+char* getLastElementBySlash(const char* str) {
+    // 尋找最後一個斜線的位置
+    const char* lastSlash = strrchr(str, '/');
+
+    // 如果找不到斜線，返回原始字符串
+    if (lastSlash == NULL) return (char*)str;
+
+    // 返回斜線後面的元素
+    return (char*)(lastSlash + 1);
+}
 
 int bwrite(int dev, uint64_t no, void *buffer) {
     FILE *fp = fopen(FILE_NAME, "rb+");
@@ -19,7 +42,7 @@ int bwrite(int dev, uint64_t no, void *buffer) {
 
     fseek(fp, no * BLOCK_SIZE, SEEK_SET);
 
-    printf("writing to %ld, length = %d\n", no * BLOCK_SIZE, BLOCK_SIZE);
+    /* printf("writing to %ld, length = %d\n", no * BLOCK_SIZE, BLOCK_SIZE); */
     size_t writeSize = fwrite((char*)buffer, 1, BLOCK_SIZE, fp);
     fclose(fp);
 
@@ -66,8 +89,9 @@ uint64_t dalloc() {
             }
         }
         if (allZero) {
-            printf("alloc %ld\n", addr);
-            printf("%d\n", bwrite(0, addr, &temp));
+            /* printf("alloc %ld\n", addr); */
+            /* printf("%d\n", bwrite(0, addr, &temp)); */
+            bwrite(0, addr, &temp);
             return addr;
         }
         addr++;
@@ -124,6 +148,7 @@ void addFile(const char *filename) {
 
 
     /* printf("->%d\n", fs_create("/", "test")); */
+	filename = getLastElementBySlash(filename);
     fs_create("/", filename);
 	char path[257] = "/";
 	strcpy(path + 1, filename);
@@ -138,7 +163,6 @@ int main(int argc, char *argv[]) {
         for (int i = 1; i < argc; i++) {
             addFile(argv[i]);
         }
-
         dump_fs();
     } else {
         printf("not empty disk.\n");
